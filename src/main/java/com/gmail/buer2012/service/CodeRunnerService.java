@@ -51,9 +51,9 @@ public class CodeRunnerService {
         return result;
     }
     
-    public Map<String, List<String>> run(File fileWithSourceCode, String fullClassName) throws IOException {
+    public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException {
         Map<String, List<String>> result = new HashMap<>();
-        Process process = Runtime.getRuntime().exec("java -cp . " + fullClassName);
+        Process process = Runtime.getRuntime().exec("java " + className, null, new File("tmp"));
         BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         result.put("errors", Collections.singletonList(errors.readLine()));
     

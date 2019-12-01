@@ -5,5 +5,5 @@ import lombok.*;
 @Data
 public class Request {
     private String sourceCode;
-    private String fullClassName;
+    private String className;
 }
