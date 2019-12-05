@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.gmail.buer2012</groupId>
-    <artifactId>compiler</artifactId>
+    <artifactId>coderunner-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>code-runner</name>
     <description>Back-end part of project</description>

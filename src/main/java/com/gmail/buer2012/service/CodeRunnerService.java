@@ -55,7 +55,12 @@ public class CodeRunnerService {
         Map<String, List<String>> result = new HashMap<>();
         Process process = Runtime.getRuntime().exec("java " + className, null, new File("tmp"));
         BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-        result.put("errors", Collections.singletonList(errors.readLine()));
+        String line;
+        StringBuilder stringBuffer = new StringBuilder();
+        while ((line = errors.readLine()) != null) {
+            stringBuffer.append(line);
+        }
+        result.put("errors", Collections.singletonList(stringBuffer.toString()));
     
         BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
         result.put("output", Collections.singletonList(in.readLine()));
