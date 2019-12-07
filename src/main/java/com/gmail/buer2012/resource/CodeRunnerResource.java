@@ -17,7 +17,7 @@ public class CodeRunnerResource {
     private CodeRunnerService codeRunnerService;
     private static String DIRECTORYNAME = "tmp";
     
-    @CrossOrigin(origins = "http://localhost:3000")
+    @CrossOrigin(origins = "https://coderunner.tcomad.tk:80")
     @PostMapping(value = "/run", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody Request request) throws IOException {
         String className = request.getClassName();
