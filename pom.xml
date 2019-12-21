@@ -11,7 +11,7 @@
     <groupId>com.gmail.buer2012</groupId>
     <artifactId>coderunner-service</artifactId>
     <version>1.1.0-SNAPSHOT</version>
-    <name>code-runner</name>
+    <name>coderunner</name>
     <description>Back-end part of project</description>
 
     <properties>
@@ -43,6 +43,7 @@
     </dependencies>
 
     <build>
+        <finalName>coderunner</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
