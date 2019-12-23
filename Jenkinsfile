@@ -27,7 +27,7 @@ pipeline {
         branch 'release/*'
       }
       steps {
-        sh 'cd ${PWD}; ls -la'
+        sh 'cd /root; ls -la'
       }
     }
   }
