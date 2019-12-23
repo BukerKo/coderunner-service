@@ -27,7 +27,7 @@ pipeline {
         branch 'release/*'
       }
       steps {
-        sh '${PWD}/daemonize.sh -8090 -coderunner.sh'
+        sh 'cd ${PWD}; ls -la'
       }
     }
   }
