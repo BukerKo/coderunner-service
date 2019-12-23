@@ -18,7 +18,7 @@ pipeline {
         branch 'release/*'
       }
       steps {
-        sh 'cp -r ${WORKSPACE}/target/**/*.jar /root'
+        sh 'cp -r ${WORKSPACE}/target/coderunner.jar /root'
       }
     }
 
