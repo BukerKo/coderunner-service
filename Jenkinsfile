@@ -27,8 +27,8 @@ pipeline {
         branch 'release/*'
       }
       steps {
-        sh 'cd /root'
-        sh './daemonize.sh -8090 -coderunner.sh'
+        sh 'cd /root
+            ./daemonize.sh -8090 -coderunner.sh'
       }
     }
   }
