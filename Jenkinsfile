@@ -27,7 +27,7 @@ pipeline {
         branch 'release/*'
       }
       steps {
-        sh 'cd ; echo ${WORKSPACE}'
+        sh 'cd ; echo ${PWD}'
       }
     }
   }
