@@ -3,6 +3,8 @@ package com.gmail.buer2012.resource;
 import com.gmail.buer2012.entity.Request;
 import com.gmail.buer2012.service.CodeRunnerService;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,8 @@ import java.util.*;
 @AllArgsConstructor
 public class CodeRunnerResource {
     
+    private static final Logger LOGGER= LoggerFactory.getLogger(CodeRunnerResource.class);
+    
     private CodeRunnerService codeRunnerService;
     private static String DIRECTORYNAME = "temporary";
     
@@ -23,6 +27,7 @@ public class CodeRunnerResource {
         String className = request.getClassName();
         String pathToClass = DIRECTORYNAME + File.separator + className;
         File fileWithSourceCode = new File(pathToClass + ".java");
+        LOGGER.info("Writing code to file " + fileWithSourceCode);
         
         if (fileWithSourceCode.getParentFile().mkdirs() && fileWithSourceCode.createNewFile()) {
             writeToFile(fileWithSourceCode, request.getSourceCode());
