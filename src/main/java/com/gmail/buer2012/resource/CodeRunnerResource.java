@@ -15,7 +15,7 @@ import java.util.*;
 public class CodeRunnerResource {
     
     private CodeRunnerService codeRunnerService;
-    private static String DIRECTORYNAME = "tmp";
+    private static String DIRECTORYNAME = "temporary";
     
     @CrossOrigin(origins = "https://coderunner.tcomad.tk:80")
     @PostMapping(value = "/run", consumes = "application/json", produces = "application/json")
