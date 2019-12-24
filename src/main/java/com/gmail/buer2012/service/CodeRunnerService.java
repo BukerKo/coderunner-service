@@ -20,9 +20,9 @@ public class CodeRunnerService {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
     
-        List<String> optionList = new ArrayList<>();
-        optionList.add("-classpath");
-        optionList.add(System.getProperty("java.class.path"));
+//        List<String> optionList = new ArrayList<>();
+//        optionList.add("-classpath");
+//        optionList.add(System.getProperty("java.class.path"));
     
         Iterable<? extends JavaFileObject> compilationUnit
                 = fileManager.getJavaFileObjectsFromFiles(Collections.singletonList(fileWithSourceCode));
@@ -30,7 +30,7 @@ public class CodeRunnerService {
                 null,
                 fileManager,
                 diagnostics,
-                optionList,
+                null,
                 null,
                 compilationUnit);
     
