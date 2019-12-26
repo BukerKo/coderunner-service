@@ -20,6 +20,8 @@ pipeline {
     stage('startup') {
       steps {
         sh 'service coderunner restart'
+        sleep 10
+        sh 'systemctl is-active coderunner'
       }
     }
   }
