@@ -12,13 +12,14 @@ pipeline {
 
     stage('deploy:prod') {
       steps {
-        sh 'cp -r ${WORKSPACE}/target/coderunner.jar /root'
+        sh 'cp -r ${WORKSPACE}/target/coderunner.jar /root/coderunner'
+        sh 'chmod +x /root/coderunner/coderunner.jar'
       }
     }
 
     stage('startup') {
       steps {
-        sh '/root/daemonize.sh 8090 coderunner.sh'
+        sh 'service coderunner restart'
       }
     }
   }
