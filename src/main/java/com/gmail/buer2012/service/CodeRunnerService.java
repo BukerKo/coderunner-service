@@ -1,6 +1,8 @@
 package com.gmail.buer2012.service;
 
 
+import com.gmail.buer2012.config.CustomProperties;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.tools.*;
@@ -13,17 +15,16 @@ import java.util.*;
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
 @Service
+@AllArgsConstructor
 public class CodeRunnerService {
+    
+    private final CustomProperties customProperties;
     
     public Map<String, List<String>> compile(File fileWithSourceCode) throws IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-    
-//        List<String> optionList = new ArrayList<>();
-//        optionList.add("-classpath");
-//        optionList.add(System.getProperty("java.class.path"));
-    
+        
         Iterable<? extends JavaFileObject> compilationUnit
                 = fileManager.getJavaFileObjectsFromFiles(Collections.singletonList(fileWithSourceCode));
         JavaCompiler.CompilationTask task = compiler.getTask(
@@ -53,7 +54,7 @@ public class CodeRunnerService {
     
     public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException {
         Map<String, List<String>> result = new HashMap<>();
-        Process process = Runtime.getRuntime().exec("java " + className, null, new File("tmp"));
+        Process process = Runtime.getRuntime().exec("java " + className, null, new File(customProperties.getTemporaryDir()));
         BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         String line;
         StringBuilder stringBuffer = new StringBuilder();

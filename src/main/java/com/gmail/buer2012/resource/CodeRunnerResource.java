@@ -1,5 +1,6 @@
 package com.gmail.buer2012.resource;
 
+import com.gmail.buer2012.config.CustomProperties;
 import com.gmail.buer2012.entity.Request;
 import com.gmail.buer2012.service.CodeRunnerService;
 import lombok.AllArgsConstructor;
@@ -19,13 +20,13 @@ public class CodeRunnerResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(CodeRunnerResource.class);
     
     private CodeRunnerService codeRunnerService;
-    private static String DIRECTORYNAME = "temporary";
+    private final CustomProperties customProperties;
     
     @CrossOrigin(origins = "https://coderunner.tcomad.tk:80")
     @PostMapping(value = "/run", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody Request request) throws IOException {
         String className = request.getClassName();
-        String pathToClass = DIRECTORYNAME + File.separator + className;
+        String pathToClass = customProperties.getTemporaryDir() + File.separator + className;
         File fileWithSourceCode = new File(pathToClass + ".java");
         LOGGER.error("Writing code to file " + fileWithSourceCode);
         
