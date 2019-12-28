@@ -1,6 +1,10 @@
 pipeline {
   agent any
 
+  environment {
+    CODERUNNER_PATH = '/root/coderunner'
+  }
+
   stages {
     stage('mvn:install') {
       steps {
@@ -12,14 +16,14 @@ pipeline {
 
     stage('deploy:prod') {
       steps {
-        sh 'cp -r ${WORKSPACE}/target/coderunner.jar /root/coderunner'
-        sh 'chmod +x /root/coderunner/coderunner.jar'
+        sh 'cp -r ${WORKSPACE}/target/coderunner.jar ${CODERUNNER_PATH}'
+        sh 'chmod +x ${CODERUNNER_PATH}/coderunner.jar'
       }
     }
 
     stage('startup') {
       steps {
-        sh '/root/coderunner/start.sh'
+        sh '${CODERUNNER_PATH}/start.sh'
       }
     }
   }
