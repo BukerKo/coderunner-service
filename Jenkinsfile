@@ -19,8 +19,7 @@ pipeline {
 
     stage('startup') {
       steps {
-        sh 'service coderunner restart'
-        sh '/root/coderunner/coderunner.sh'
+        sh '/root/coderunner/start.sh'
       }
     }
   }
