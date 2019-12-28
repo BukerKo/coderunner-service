@@ -17,18 +17,15 @@ import java.util.*;
 @AllArgsConstructor
 public class CodeRunnerResource {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(CodeRunnerResource.class);
-    
     private CodeRunnerService codeRunnerService;
     private final CustomProperties customProperties;
     
     @CrossOrigin(origins = "https://coderunner.tcomad.tk:80")
     @PostMapping(value = "/run", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody Request request) throws IOException {
+    public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody Request request) throws IOException, InterruptedException {
         String className = request.getClassName();
         String pathToClass = customProperties.getTemporaryDir() + File.separator + className;
         File fileWithSourceCode = new File(pathToClass + ".java");
-        LOGGER.error("Writing code to file " + fileWithSourceCode);
         
         if (fileWithSourceCode.getParentFile().mkdirs() && fileWithSourceCode.createNewFile()) {
             writeToFile(fileWithSourceCode, request.getSourceCode());

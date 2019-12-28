@@ -6,10 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.tools.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
@@ -19,6 +16,7 @@ import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 public class CodeRunnerService {
     
     private final CustomProperties customProperties;
+    private static final String DOCKERFILENAME = "Dockerfile";
     
     public Map<String, List<String>> compile(File fileWithSourceCode) throws IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
@@ -52,19 +50,40 @@ public class CodeRunnerService {
         return result;
     }
     
-    public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException {
+    public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException, InterruptedException {
+        createDockerfile(className);
+        
+        String dockerContainerName = String.valueOf(System.currentTimeMillis());
+        String dockerBuildCommand = "docker build -t " + dockerContainerName + " .";
+        String dockerRunCommand = "docker run " + dockerContainerName;
+        
+        Process buildDocker = Runtime.getRuntime().exec(dockerBuildCommand, null, new File(customProperties.getTemporaryDir()));
+        buildDocker.waitFor();
+        Process runDocker = Runtime.getRuntime().exec(dockerRunCommand, null, new File(customProperties.getTemporaryDir()));
+    
         Map<String, List<String>> result = new HashMap<>();
-        Process process = Runtime.getRuntime().exec("java " + className, null, new File(customProperties.getTemporaryDir()));
-        BufferedReader errors = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        result.put("errors", parseOutputFromProgram(runDocker.getErrorStream()));
+        result.put("output", parseOutputFromProgram(runDocker.getInputStream()));
+        
+        return result;
+    }
+    
+    private void createDockerfile(String className) throws IOException {
+        String directoryToSaveTo = customProperties.getTemporaryDir() + File.separator;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + DOCKERFILENAME));
+        writer.write("FROM openjdk:8-jre-alpine\n");
+        writer.write("COPY " + className + ".class /\n");
+        writer.write("CMD [\"java\", \"" + className + "\"]");
+        writer.close();
+    }
+    
+    private List<String> parseOutputFromProgram(InputStream inputStream) throws IOException {
+        BufferedReader errors = new BufferedReader(new InputStreamReader(inputStream));
         String line;
         StringBuilder stringBuffer = new StringBuilder();
         while ((line = errors.readLine()) != null) {
             stringBuffer.append(line);
         }
-        result.put("errors", Collections.singletonList(stringBuffer.toString()));
-    
-        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        result.put("output", Collections.singletonList(in.readLine()));
-        return result;
+        return Collections.singletonList(stringBuffer.toString());
     }
 }
