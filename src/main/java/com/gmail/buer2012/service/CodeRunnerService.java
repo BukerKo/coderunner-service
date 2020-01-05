@@ -1,8 +1,7 @@
 package com.gmail.buer2012.service;
 
 
-import com.gmail.buer2012.config.CustomProperties;
-import lombok.AllArgsConstructor;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import javax.tools.*;
@@ -12,35 +11,23 @@ import java.util.*;
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
 @Service
-@AllArgsConstructor
 public class CodeRunnerService {
-    
-    private final CustomProperties customProperties;
-    private static final String DOCKERFILENAME = "Dockerfile";
-    
-    public Map<String, List<String>> compile(File fileWithSourceCode) throws IOException {
-        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-        
-        Iterable<? extends JavaFileObject> compilationUnit
-                = fileManager.getJavaFileObjectsFromFiles(Collections.singletonList(fileWithSourceCode));
-        JavaCompiler.CompilationTask task = compiler.getTask(
-                null,
-                fileManager,
-                diagnostics,
-                null,
-                null,
-                compilationUnit);
-    
-        if (!task.call()) {
-            return handleErrors(diagnostics.getDiagnostics());
-        }
-        fileManager.close();
-    
+
+    @Setter
+    private String className;
+
+    private static final String CLASSPATH = System.getProperty("java.class.path");
+
+    public Map<String, List<String>> compile(String fileWithSourceCode) throws IOException {
+
+        Class<?> aClass = SimpleJavaCompiler.compile(Object.class, fileWithSourceCode);
+
+        Map<String, List<String>> run = run(aClass);
+
         return null;
     }
-    
+
+
     private Map<String, List<String>> handleErrors(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
         Map<String, List<String>> result = new HashMap<>();
         if (diagnostics != null) {
@@ -87,3 +74,18 @@ public class CodeRunnerService {
         return Collections.singletonList(stringBuffer.toString());
     }
 }
+
+class JavaSourceFromString extends SimpleJavaFileObject {
+    final String code;
+
+    JavaSourceFromString(String name, String code) {
+        super(URI.create("string:///" + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
+        this.code = code;
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+        return code;
+    }
+}
+

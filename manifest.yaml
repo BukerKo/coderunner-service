@@ -1,0 +1,6 @@
+---
+applications:
+  - name: coderunner-service
+    memory: 1G
+    random-route: true
+    path: target/coderunner.jar
