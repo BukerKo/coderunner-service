@@ -1,4 +1,4 @@
-package com.gmail.buer2012.entity;
+package com.gmail.buer2012.payload;
 
 import lombok.*;
 

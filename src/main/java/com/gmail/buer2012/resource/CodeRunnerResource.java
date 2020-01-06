@@ -1,11 +1,9 @@
 package com.gmail.buer2012.resource;
 
 import com.gmail.buer2012.config.CustomProperties;
-import com.gmail.buer2012.entity.Request;
+import com.gmail.buer2012.payload.Request;
 import com.gmail.buer2012.service.CodeRunnerService;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.*;
