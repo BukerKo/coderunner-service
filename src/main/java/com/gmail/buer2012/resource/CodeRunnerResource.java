@@ -1,7 +1,7 @@
 package com.gmail.buer2012.resource;
 
 import com.gmail.buer2012.config.CustomProperties;
-import com.gmail.buer2012.payload.Request;
+import com.gmail.buer2012.payload.CoderunnerRequest;
 import com.gmail.buer2012.service.CodeRunnerService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +20,13 @@ public class CodeRunnerResource {
     
     @CrossOrigin(origins = "https://coderunner.tcomad.tk:80")
     @PostMapping(value = "/run", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody Request request) throws IOException, InterruptedException {
-        String className = request.getClassName();
+    public ResponseEntity<Map<String, List<String>>> runCode(@RequestBody CoderunnerRequest coderunnerRequest) throws IOException, InterruptedException {
+        String className = coderunnerRequest.getClassName();
         String pathToClass = customProperties.getTemporaryDir() + File.separator + className;
         File fileWithSourceCode = new File(pathToClass + ".java");
         
         if (fileWithSourceCode.getParentFile().mkdirs() && fileWithSourceCode.createNewFile()) {
-            writeToFile(fileWithSourceCode, request.getSourceCode());
+            writeToFile(fileWithSourceCode, coderunnerRequest.getSourceCode());
             Map<String, List<String>> errors = codeRunnerService.compile(fileWithSourceCode);
             if (errors != null) {
                 FileSystemUtils.deleteRecursively(fileWithSourceCode.getParentFile());

@@ -1,18 +1,16 @@
 package com.gmail.buer2012.payload;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NonNull;
 
-import javax.validation.constraints.NotBlank;
 
 @Data
 public class SignInRequest {
 
-    @NotBlank
+    @NonNull
     private String usernameOrEmail;
 
-    @NotBlank
+    @NonNull
     private String password;
 
 }

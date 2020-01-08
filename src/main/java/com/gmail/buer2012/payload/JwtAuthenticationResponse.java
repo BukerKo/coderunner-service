@@ -1,4 +1,4 @@
-package com.gmail.buer2012.resource;
+package com.gmail.buer2012.payload;
 
 import com.gmail.buer2012.entity.RoleName;
 import lombok.Data;
@@ -17,10 +17,5 @@ public class JwtAuthenticationResponse {
     private String username;
 
     private String tokenType = "Bearer";
-
-//    public JwtAuthenticationResponse(String accessToken, RoleName role) {
-//        this.accessToken = accessToken;
-//        this.role = role;
-//    }
-
+    
 }

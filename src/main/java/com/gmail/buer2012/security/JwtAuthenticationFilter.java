@@ -1,6 +1,5 @@
 package com.gmail.buer2012.security;
 
-
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
@@ -20,10 +19,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @NoArgsConstructor
-@AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    
+    @Autowired
     private JwtTokenProvider tokenProvider;
+    
+    @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);

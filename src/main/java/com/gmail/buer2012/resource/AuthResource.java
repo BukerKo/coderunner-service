@@ -5,6 +5,7 @@ import com.gmail.buer2012.entity.Role;
 import com.gmail.buer2012.entity.RoleName;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.ApiResponse;
+import com.gmail.buer2012.payload.JwtAuthenticationResponse;
 import com.gmail.buer2012.payload.SignInRequest;
 import com.gmail.buer2012.payload.SignUpRequest;
 import com.gmail.buer2012.repository.RoleRepository;
@@ -60,21 +61,21 @@ public class AuthResource {
     
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
-        if (userService.existsByUsername(signUpRequest.getUsername())) {
+        String requestUsername = signUpRequest.getUsername();
+        String requestEmail = signUpRequest.getEmail();
+        String requestPassword = signUpRequest.getPassword();
+    
+        if (userService.existsByUsername(requestUsername)) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, "Username is already taken!"));
         }
-        
-        if (userService.existsByEmail(signUpRequest.getEmail())) {
+        if (userService.existsByEmail(requestEmail)) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, "Email Address already in use!"));
         }
-        
-        // Creating user's account
-        User user = new User(signUpRequest.getEmail(), passwordEncoder.encode(signUpRequest.getPassword()), signUpRequest.getUsername());
-        
+    
+        User user = new User(requestEmail, passwordEncoder.encode(requestPassword), requestUsername);
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER);
-        
         user.setRoles(Collections.singleton(userRole));
         
         User result = userService.persist(user);
@@ -83,6 +84,6 @@ public class AuthResource {
                 .fromCurrentContextPath().path("/api/users/{username}")
                 .buildAndExpand(result.getUsername()).toUri();
         
-        return ResponseEntity.created(location).body(new ApiResponse(true, "User registered successfully"));
+        return ResponseEntity.created(location).body(authenticateUser(new SignInRequest(requestEmail, requestPassword)).getBody());
     }
 }
