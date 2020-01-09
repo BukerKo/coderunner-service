@@ -4,9 +4,9 @@ app:
     tokenExpirationMsec: 604800000
   oauth2:
     authorizedRedirectUris:
-      - http://localhost:3000/oauth2/redirect
+      - https://coderunner.tcomad.tk/student
 
-
+server.
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
