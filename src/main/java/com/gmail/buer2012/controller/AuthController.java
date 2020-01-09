@@ -1,6 +1,7 @@
-package com.gmail.buer2012.resource;
+package com.gmail.buer2012.controller;
 
 
+import com.gmail.buer2012.entity.AuthProvider;
 import com.gmail.buer2012.entity.Role;
 import com.gmail.buer2012.entity.RoleName;
 import com.gmail.buer2012.entity.User;
@@ -32,8 +33,8 @@ import java.util.Collections;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/auth")
-public class AuthResource {
+@RequestMapping("/auth")
+public class AuthController {
     
     private AuthenticationManager authenticationManager;
     private UserService userService;
@@ -42,7 +43,7 @@ public class AuthResource {
     private JwtTokenProvider tokenProvider;
     private ApiUtils apiUtils;
     
-    @PostMapping("/signin")
+    @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody SignInRequest signInRequest) {
         
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
@@ -74,16 +75,17 @@ public class AuthResource {
                     .body(new ApiResponse(false, "Email Address already in use!"));
         }
     
-        User user = new User(requestEmail, passwordEncoder.encode(requestPassword), requestUsername);
+        User user = new User(requestEmail, passwordEncoder.encode(requestPassword), requestUsername, AuthProvider.local);
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER);
         user.setRoles(Collections.singleton(userRole));
         
         User result = userService.persist(user);
         
         URI location = ServletUriComponentsBuilder
-                .fromCurrentContextPath().path("/api/users/{username}")
+                .fromCurrentContextPath().path("/user/me")
                 .buildAndExpand(result.getUsername()).toUri();
         
-        return ResponseEntity.created(location).body(authenticateUser(new SignInRequest(requestEmail, requestPassword)).getBody());
+        return ResponseEntity.created(location)
+                .body(authenticateUser(new SignInRequest(requestEmail, requestPassword)).getBody());
     }
 }

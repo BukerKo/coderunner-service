@@ -1,0 +1,32 @@
+app:
+  auth:
+    tokenSecret: JWTSuperSecretKey
+    tokenExpirationMsec: 604800000
+  oauth2:
+    authorizedRedirectUris:
+      - http://localhost:3000/oauth2/redirect
+
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://77.120.176.234:3306/Coderunner?serverTimezone=UTC&useUnicode=yes&characterEncoding=UTF-8
+    username: root
+    password: 19092708MishaLena
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  security:
+    oauth2:
+      client:
+        registration:
+          facebook:
+            clientId: 848358615623604
+            clientSecret: 2dd7d5366c61894eb4d0b8ae336a685c
+            redirectUri: "{baseUrl}/oauth2/callback/{registrationId}" # Note that facebook now mandates the use of https redirect URIs, so make sure your app supports https in production
+            scope:
+              - email
+              - public_profile

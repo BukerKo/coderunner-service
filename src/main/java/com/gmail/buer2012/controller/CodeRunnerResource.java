@@ -1,4 +1,4 @@
-package com.gmail.buer2012.resource;
+package com.gmail.buer2012.controller;
 
 import com.gmail.buer2012.config.CustomProperties;
 import com.gmail.buer2012.payload.CoderunnerRequest;

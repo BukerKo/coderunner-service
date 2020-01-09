@@ -3,6 +3,7 @@ package com.gmail.buer2012.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,10 +31,17 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
     
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
     
-    public User(String email, String password, String username) {
+    private String providerId;
+    
+    
+    public User(String email, String password, String username, AuthProvider provider) {
         this.email = email;
         this.password = password;
         this.username = username;
+        this.provider = provider;
     }
 }
