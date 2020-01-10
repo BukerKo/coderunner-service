@@ -15,6 +15,9 @@ pipeline {
     }
 
     stage('deploy:prod') {
+      when {
+        branch 'master'
+      }
       steps {
         sh 'cp -r ${WORKSPACE}/target/coderunner.jar ${CODERUNNER_PATH}'
         sh 'chmod +x ${CODERUNNER_PATH}/coderunner.jar'
@@ -22,6 +25,9 @@ pipeline {
     }
 
     stage('startup') {
+      when {
+        branch 'master'
+      }
       steps {
         sh '${CODERUNNER_PATH}/start.sh'
       }
