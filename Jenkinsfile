@@ -33,4 +33,13 @@ pipeline {
       }
     }
   }
+
+  post {
+    success {
+      telegramSend 'coderunner-service build status: success'
+    }
+    failure {
+      telegramSend 'coderunner-service build status: failure'
+    }
+  }
 }
