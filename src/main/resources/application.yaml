@@ -4,9 +4,18 @@ app:
     tokenExpirationMsec: 604800000
   oauth2:
     authorizedRedirectUris:
-      - https://coderunner.tcomad.tk/student
+      - https://coderunner.tcomad.tk/login
+
+server:
+  use-forward-headers: true
+  tomcat:
+    internal-proxies: .*
+    uri-encoding: utf-8
 
 spring:
+  http:
+    encoding:
+      charset: UTF-8
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://77.120.176.234:3306/Coderunner?serverTimezone=UTC&useUnicode=yes&characterEncoding=UTF-8

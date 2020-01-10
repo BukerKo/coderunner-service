@@ -1,11 +1,18 @@
 package com.gmail.buer2012.security.oauth2;
 
 import com.gmail.buer2012.config.AppProperties;
+import com.gmail.buer2012.entity.RoleName;
 import com.gmail.buer2012.exception.BadRequestException;
 import com.gmail.buer2012.security.JwtTokenProvider;
+import com.gmail.buer2012.security.UserPrincipal;
+import com.gmail.buer2012.utils.ApiUtils;
 import com.gmail.buer2012.utils.CookieUtils;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -16,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Optional;
 
 import static com.gmail.buer2012.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
@@ -23,14 +31,15 @@ import static com.gmail.buer2012.security.oauth2.HttpCookieOAuth2AuthorizationRe
 @Component
 @AllArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-    
+
     private JwtTokenProvider tokenProvider;
+
     private AppProperties appProperties;
+
     private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        System.out.println("all is ok");
         String targetUrl = determineTargetUrl(request, response, authentication);
         
         if (response.isCommitted()) {
@@ -53,9 +62,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
         
         String token = tokenProvider.generateToken(authentication);
-        
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        String role = String.valueOf(Arrays.stream(authentication.getAuthorities().toArray()).findFirst().orElse(null));
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("token", token)
+                .queryParam("username", userPrincipal.getUsername())
+                .queryParam("role", RoleName.valueOf(role))
                 .build().toUriString();
     }
     

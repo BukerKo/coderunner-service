@@ -1,12 +1,16 @@
 package com.gmail.buer2012.security.oauth2;
 
 import com.gmail.buer2012.entity.AuthProvider;
+import com.gmail.buer2012.entity.Role;
+import com.gmail.buer2012.entity.RoleName;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.exception.OAuth2AuthenticationProcessingException;
+import com.gmail.buer2012.repository.RoleRepository;
 import com.gmail.buer2012.repository.UserRepository;
 import com.gmail.buer2012.security.UserPrincipal;
 import com.gmail.buer2012.security.oauth2.user.OAuth2UserInfo;
 import com.gmail.buer2012.security.oauth2.user.OAuth2UserInfoFactory;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
@@ -17,13 +21,15 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     
-    @Autowired
     private UserRepository userRepository;
+    private RoleRepository roleRepository;
     
     @Override
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
@@ -69,6 +75,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         user.setProviderId(oAuth2UserInfo.getId());
         user.setUsername(oAuth2UserInfo.getName());
         user.setEmail(oAuth2UserInfo.getEmail());
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER);
+        user.setRoles(Collections.singleton(userRole));
         return userRepository.save(user);
     }
     

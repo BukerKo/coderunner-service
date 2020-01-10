@@ -5,6 +5,7 @@ import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.security.UserPrincipal;
 import com.gmail.buer2012.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,7 +17,6 @@ import java.util.Collection;
 @Component
 @AllArgsConstructor
 public class ApiUtils {
-
     private UserService userService;
     
     public RoleName getRoleFromAuthorities(Collection<? extends GrantedAuthority> authorities) {
