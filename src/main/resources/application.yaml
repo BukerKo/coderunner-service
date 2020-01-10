@@ -7,10 +7,10 @@ app:
       - https://coderunner.tcomad.tk/login
 
 server:
-  use-forward-headers: true
   tomcat:
     internal-proxies: .*
     uri-encoding: utf-8
+  forward-headers-strategy: native
 
 spring:
   http:
