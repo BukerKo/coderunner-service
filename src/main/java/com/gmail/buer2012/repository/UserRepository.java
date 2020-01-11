@@ -12,12 +12,12 @@ public interface UserRepository extends PagingAndSortingRepository<User, Long> {
 
     Optional<User> findByUsernameOrEmail(String username, String email);
 
+    Optional<User> findByEmail(String email);
+
     Optional<User> findByUsername(String username);
 
     Boolean existsByUsername(String username);
 
     Boolean existsByEmail(String email);
-
-    void deleteByIdIn(List<Long> ids);
 
 }

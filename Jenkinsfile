@@ -3,6 +3,7 @@ pipeline {
 
   environment {
     CODERUNNER_PATH = '/root/coderunner'
+    AWS_DNS = 'ubuntu@ec2-18-222-208-138.us-east-2.compute.amazonaws.com'
   }
 
   stages {
@@ -19,8 +20,8 @@ pipeline {
         branch 'master'
       }
       steps {
-        sh 'cp -r ${WORKSPACE}/target/coderunner.jar ${CODERUNNER_PATH}'
-        sh 'chmod +x ${CODERUNNER_PATH}/coderunner.jar'
+        sh 'ssh -i ~/Coderunner.pem ${AWS_DNS} sudo rm ~/coderunner/coderunner.jar'
+        sh 'scp -i ~/Coderunner.pem ${WORKSPACE}/target/coderunner.jar ${AWS_DNS}:~/coderunner/'
       }
     }
 
@@ -29,7 +30,7 @@ pipeline {
         branch 'master'
       }
       steps {
-        sh '${CODERUNNER_PATH}/start.sh'
+              sh 'ssh -i ~/Coderunner.pem ${AWS_DNS} sudo /home/ubuntu/start.sh'
       }
     }
   }

@@ -42,11 +42,6 @@ public class UserService {
         return userRepository.save(user);
     }
     
-    @Transactional
-    public void deleteByIdIn(List<Long> ids) {
-        userRepository.deleteByIdIn(ids);
-    }
-    
     public Boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }

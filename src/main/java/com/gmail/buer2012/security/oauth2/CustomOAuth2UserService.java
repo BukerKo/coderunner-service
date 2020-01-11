@@ -11,7 +11,6 @@ import com.gmail.buer2012.security.UserPrincipal;
 import com.gmail.buer2012.security.oauth2.user.OAuth2UserInfo;
 import com.gmail.buer2012.security.oauth2.user.OAuth2UserInfoFactory;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -51,7 +50,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider");
         }
         
-        Optional<User> userOptional = userRepository.findByUsernameOrEmail(oAuth2UserInfo.getEmail(), oAuth2UserInfo.getName());
+        Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
         User user;
         if(userOptional.isPresent()) {
             user = userOptional.get();
