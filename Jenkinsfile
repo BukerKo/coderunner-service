@@ -31,7 +31,7 @@ pipeline {
         branch 'master'
       }
       steps {
-              sh 'ssh -i ${KEY_LOCATION} ${AWS_DNS} sudo {CODERUNNER_PATH}/start.sh'
+              sh 'ssh -i ${KEY_LOCATION} ${AWS_DNS} sudo ${CODERUNNER_PATH}/start.sh'
       }
     }
   }
