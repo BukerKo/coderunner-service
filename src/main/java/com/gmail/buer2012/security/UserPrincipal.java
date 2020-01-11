@@ -1,6 +1,7 @@
 package com.gmail.buer2012.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gmail.buer2012.entity.AuthProvider;
 import com.gmail.buer2012.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -36,13 +37,18 @@ public class UserPrincipal implements OAuth2User, UserDetails {
     @Setter
     @Getter
     private Map<String, Object> attributes;
+
+    @Getter
+    @Setter
+    private AuthProvider provider;
     
-    public UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String username, String email, String password, Collection<? extends GrantedAuthority> authorities, AuthProvider provider) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
+        this.provider = provider;
     }
     
     public static UserPrincipal create(User user) {
@@ -55,7 +61,8 @@ public class UserPrincipal implements OAuth2User, UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                authorities
+                authorities,
+                user.getProvider()
         );
     }
     
