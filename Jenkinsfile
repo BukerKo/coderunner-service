@@ -30,7 +30,7 @@ pipeline {
         branch 'master'
       }
       steps {
-              sh 'ssh -i ~/Coderunner.pem ${AWS_DNS} sudo /home/ubuntu/start.sh'
+              sh 'ssh -i ~/Coderunner.pem ${AWS_DNS} sudo /home/ubuntu/coderunner/start.sh'
       }
     }
   }
