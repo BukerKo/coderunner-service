@@ -56,8 +56,10 @@ public class AuthController {
         
         String jwt = tokenProvider.generateToken(authentication);
         RoleName role = apiUtils.getRoleFromAuthorities(authentication.getAuthorities());
-        String username = ((UserPrincipal) authentication.getPrincipal()).getUsername();
-        return ResponseEntity.ok().body(new JwtAuthenticationResponse(jwt, role, username));
+        UserPrincipal userPrincipal = ((UserPrincipal) authentication.getPrincipal());
+        String username = userPrincipal.getUsername();
+        AuthProvider provider = userPrincipal.getProvider();
+        return ResponseEntity.ok().body(new JwtAuthenticationResponse(jwt, role, username, provider));
     }
     
     @PostMapping("/signup")
