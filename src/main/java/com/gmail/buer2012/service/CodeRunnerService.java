@@ -2,12 +2,19 @@ package com.gmail.buer2012.service;
 
 
 import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.entity.User;
+import com.gmail.buer2012.payload.CoderunnerRequest;
+import com.gmail.buer2012.repository.FeatureRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
 import javax.tools.*;
 import java.io.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
@@ -15,8 +22,45 @@ import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 @AllArgsConstructor
 public class CodeRunnerService {
     
+    private FeatureRepository featureRepository;
+    private RunInformationService runInformationService;
+    
     private final CustomProperties customProperties;
+    private static final String gatherInformation = "gatherInformation";
+    
     private static final String DOCKERFILENAME = "Dockerfile";
+    
+    public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user) throws IOException, InterruptedException {
+        String className = coderunnerRequest.getClassName();
+        File fileWithSourceCode = new File(getPathToClass() + File.separator + className + ".java");
+        
+        if (fileWithSourceCode.getParentFile().mkdirs() && fileWithSourceCode.createNewFile()) {
+            writeToFile(fileWithSourceCode, coderunnerRequest.getSourceCode());
+            Map<String, List<String>> compileErrors = compile(fileWithSourceCode);
+            if (compileErrors != null) {
+                executePostRunActions(user, fileWithSourceCode);
+                return compileErrors;
+            }
+        }
+        
+        Map<String, List<String>> result = run(fileWithSourceCode, className);
+        executePostRunActions(user, fileWithSourceCode);
+        return result;
+    }
+    
+    private void executePostRunActions(User user, File fileWithSourceCode) {
+        Boolean gatherInformationEnabled = featureRepository.findByFeatureName(gatherInformation).getEnabled();
+        if (!gatherInformationEnabled) {
+            FileSystemUtils.deleteRecursively(fileWithSourceCode.getParentFile());
+        } else {
+            runInformationService.saveOrUpdate(fileWithSourceCode, user);
+        }
+    }
+    
+    private String getPathToClass() {
+        return customProperties.getTemporaryDir() + File.separator + System.currentTimeMillis();
+    }
+    
     
     public Map<String, List<String>> compile(File fileWithSourceCode) throws IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
@@ -32,12 +76,12 @@ public class CodeRunnerService {
                 null,
                 null,
                 compilationUnit);
-    
+        
         if (!task.call()) {
             return handleErrors(diagnostics.getDiagnostics());
         }
         fileManager.close();
-    
+        
         return null;
     }
     
@@ -51,16 +95,16 @@ public class CodeRunnerService {
     }
     
     public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException, InterruptedException {
-        createDockerfile(className);
+        createDockerfile(className, fileWithSourceCode.getParent());
         
         String dockerContainerName = String.valueOf(System.currentTimeMillis());
         String dockerBuildCommand = "docker build -t " + dockerContainerName + " .";
         String dockerRunCommand = "docker run " + dockerContainerName;
         
-        Process buildDocker = Runtime.getRuntime().exec(dockerBuildCommand, null, new File(customProperties.getTemporaryDir()));
+        Process buildDocker = Runtime.getRuntime().exec(dockerBuildCommand, null, fileWithSourceCode.getParentFile());
         buildDocker.waitFor();
-        Process runDocker = Runtime.getRuntime().exec(dockerRunCommand, null, new File(customProperties.getTemporaryDir()));
-    
+        Process runDocker = Runtime.getRuntime().exec(dockerRunCommand, null, fileWithSourceCode.getParentFile());
+        
         Map<String, List<String>> result = new HashMap<>();
         result.put("errors", parseOutputFromProgram(runDocker.getErrorStream()));
         result.put("output", parseOutputFromProgram(runDocker.getInputStream()));
@@ -68,9 +112,8 @@ public class CodeRunnerService {
         return result;
     }
     
-    private void createDockerfile(String className) throws IOException {
-        String directoryToSaveTo = customProperties.getTemporaryDir() + File.separator;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + DOCKERFILENAME));
+    private void createDockerfile(String className, String directoryToSaveTo) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + File.separator + DOCKERFILENAME));
         writer.write("FROM openjdk:8-jre-alpine\n");
         writer.write("COPY " + className + ".class /\n");
         writer.write("CMD [\"java\", \"" + className + "\"]");
@@ -85,5 +128,12 @@ public class CodeRunnerService {
             stringBuffer.append(line);
         }
         return Collections.singletonList(stringBuffer.toString());
+    }
+    
+    private void writeToFile(File file, String content) throws IOException {
+        try (Writer writer = new FileWriter(file)) {
+            writer.write(content);
+            writer.flush();
+        }
     }
 }
