@@ -24,7 +24,7 @@ public class RunInformationService {
             runInformation.setPathToLastAttempt(fileWithSourceCode.getAbsolutePath());
             runInformationRepository.save(runInformation);
         } else {
-            runInformationRepository.save(new RunInformation(fileWithSourceCode.getAbsolutePath(), 0, user));
+            runInformationRepository.save(new RunInformation(fileWithSourceCode.getAbsolutePath(), 1, user));
         }
     }
     
