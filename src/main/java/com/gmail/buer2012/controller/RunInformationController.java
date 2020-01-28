@@ -1,6 +1,5 @@
 package com.gmail.buer2012.controller;
 
-import com.gmail.buer2012.entity.RunInformation;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.security.CurrentUser;
 import com.gmail.buer2012.security.UserPrincipal;
@@ -22,8 +21,11 @@ public class RunInformationController {
     @GetMapping(value = "/runInfo", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Integer> getRunInfo(@CurrentUser UserPrincipal userPrincipal) {
         User user = userService.findById(userPrincipal.getId()).get();
-        RunInformation runInformation = runInformationService.getByUser(user).get();
-        return ResponseEntity.ok(runInformation.getNumberOfTries());
+        if (runInformationService.getByUser(user).isPresent()) {
+            return ResponseEntity.ok(runInformationService.getByUser(user).get().getNumberOfTries());
+        } else {
+            return ResponseEntity.ok(0);
+        }
     }
 
 }
