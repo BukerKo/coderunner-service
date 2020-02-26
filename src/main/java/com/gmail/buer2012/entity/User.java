@@ -25,6 +25,9 @@ public class User {
     @NonNull
     private String username;
     
+    @NonNull
+    private Boolean enabled;
+    
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -38,10 +41,11 @@ public class User {
     private String providerId;
     
     
-    public User(String email, String password, String username, AuthProvider provider) {
+    public User(String email, String password, String username, AuthProvider provider, Boolean enabled) {
         this.email = email;
         this.password = password;
         this.username = username;
         this.provider = provider;
+        this.enabled = enabled;
     }
 }
