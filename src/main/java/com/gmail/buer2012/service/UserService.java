@@ -26,7 +26,7 @@ public class UserService {
     public User updateUser(User user) {
         User userFromDb = userRepository.findByUsername(user.getUsername()).orElse(null);
         
-        userFromDb.setPassword(passwordEncoder.encode(user.getPassword()));
+        userFromDb.setPassword(user.getPassword());
         userFromDb.setEmail(user.getEmail());
         userFromDb.setEnabled(user.getEnabled());
         
