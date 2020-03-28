@@ -15,16 +15,16 @@ import java.util.Optional;
 public class RunInformationService {
     RunInformationRepository runInformationRepository;
     UserRepository userRepository;
-    
-    public void saveOrUpdate(File fileWithSourceCode, User user) {
+
+    public void saveOrUpdate(String path, User user) {
         Optional<RunInformation> runInformationFromDb = runInformationRepository.findByUserId(user.getId());
         if (runInformationFromDb.isPresent()) {
             RunInformation runInformation = runInformationFromDb.get();
             runInformation.setNumberOfTries(runInformation.getNumberOfTries() + 1);
-            runInformation.setPathToLastAttempt(fileWithSourceCode.getAbsolutePath());
+            runInformation.setPathToLastAttempt(path);
             runInformationRepository.save(runInformation);
         } else {
-            runInformationRepository.save(new RunInformation(fileWithSourceCode.getAbsolutePath(), 1, user));
+            runInformationRepository.save(new RunInformation(path, 1, user));
         }
     }
     

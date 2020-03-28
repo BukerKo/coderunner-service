@@ -3,6 +3,7 @@ package com.gmail.buer2012.service;
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
 import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.entity.RunInformation;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.CoderunnerRequest;
 import com.gmail.buer2012.repository.FeatureRepository;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +42,7 @@ public class CodeRunnerService {
     
     private FeatureRepository featureRepository;
     private RunInformationService runInformationService;
+    private FileStorageService fileStorageService;
     
     private final CustomProperties customProperties;
     private static final String gatherInformation = "gatherInformation";
@@ -60,19 +63,25 @@ public class CodeRunnerService {
                 return compileErrors;
             }
         }
-        
+
         Map<String, List<String>> result = run(fileWithSourceCode, className);
         executePostRunActions(user, fileWithSourceCode);
         return result;
     }
     
-    private void executePostRunActions(User user, File fileWithSourceCode) {
+    private void executePostRunActions(User user, File fileWithSourceCode)
+        throws IOException {
         Boolean gatherInformationEnabled = featureRepository.findByFeatureName(gatherInformation).getEnabled();
-        if (!gatherInformationEnabled) {
-            FileSystemUtils.deleteRecursively(fileWithSourceCode.getParentFile());
-        } else {
-            runInformationService.saveOrUpdate(fileWithSourceCode, user);
+        if (gatherInformationEnabled) {
+            Optional<RunInformation> runInformation = runInformationService
+                .getByUser(user);
+            runInformation.ifPresent(information -> fileStorageService
+                .deleteFile(information.getPathToLastAttempt()));
+            runInformationService
+                .saveOrUpdate(fileStorageService.storeFile(fileWithSourceCode),
+                    user);
         }
+        FileSystemUtils.deleteRecursively(fileWithSourceCode.getParentFile());
     }
     
     private String getPathToClass() {
