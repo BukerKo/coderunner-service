@@ -40,7 +40,6 @@ public class FeaturesController {
   }
 
   @GetMapping(value = "/get")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<Feature>> getSettings() {
     return ResponseEntity.ok(featureRepository.findAll());
   }
