@@ -11,7 +11,6 @@ server:
     internal-proxies: .*
     uri-encoding: UTF-8
   forward-headers-strategy: native
-
 spring:
   mail:
     host: smtp.gmail.com
@@ -22,6 +21,8 @@ spring:
           auth: true
           starttls:
             enable: true
+  datasource:
+    initialization-mode: always
   http:
     encoding:
       charset: UTF-8

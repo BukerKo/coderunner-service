@@ -1,0 +1,33 @@
+name: Java CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+      - name: Build with Maven
+        run: ./mvnw package
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - name: Delete old version
+        run: ssh ubuntu@ec2-18-222-208-138.us-east-2.compute.amazonaws.com sudo rm /home/ubuntu/coderunner/coderunner.jar
+      - name: Upload new version
+        run: scp ./target/coderunner.jar ubuntu@ec2-18-222-208-138.us-east-2.compute.amazonaws.com:/home/ubuntu/coderunner/coderunner.jar
+      - name: Restart service
+        run: ssh ubuntu@ec2-18-222-208-138.us-east-2.compute.amazonaws.com sudo /home/ubuntu/coderunner/start.sh
