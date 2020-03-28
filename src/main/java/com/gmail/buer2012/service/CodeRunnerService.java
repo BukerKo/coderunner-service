@@ -1,22 +1,38 @@
 package com.gmail.buer2012.service;
 
+import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
 import com.gmail.buer2012.config.CustomProperties;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.CoderunnerRequest;
 import com.gmail.buer2012.repository.FeatureRepository;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-
-import javax.tools.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 
 @Service
 @AllArgsConstructor
@@ -29,8 +45,10 @@ public class CodeRunnerService {
     private static final String gatherInformation = "gatherInformation";
     
     private static final String DOCKERFILENAME = "Dockerfile";
+    private static final Integer EXECUTION_TIMEOUT_SECONDS = 3;
     
-    public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user) throws IOException, InterruptedException {
+    public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user)
+        throws IOException, InterruptedException, ExecutionException {
         String className = coderunnerRequest.getClassName();
         File fileWithSourceCode = new File(getPathToClass() + File.separator + className + ".java");
         
@@ -94,7 +112,8 @@ public class CodeRunnerService {
         return result;
     }
     
-    public Map<String, List<String>> run(File fileWithSourceCode, String className) throws IOException, InterruptedException {
+    public Map<String, List<String>> run(File fileWithSourceCode, String className)
+        throws IOException, InterruptedException, ExecutionException {
         createDockerfile(className, fileWithSourceCode.getParent());
         
         String dockerContainerName = String.valueOf(System.currentTimeMillis());
@@ -103,13 +122,24 @@ public class CodeRunnerService {
         
         Process buildDocker = Runtime.getRuntime().exec(dockerBuildCommand, null, fileWithSourceCode.getParentFile());
         buildDocker.waitFor();
-        Process runDocker = Runtime.getRuntime().exec(dockerRunCommand, null, fileWithSourceCode.getParentFile());
-        
-        Map<String, List<String>> result = new HashMap<>();
-        result.put("errors", parseOutputFromProgram(runDocker.getErrorStream()));
-        result.put("output", parseOutputFromProgram(runDocker.getInputStream()));
-        
-        return result;
+
+        final Process runDocker = Runtime.getRuntime().exec(dockerRunCommand, null, fileWithSourceCode.getParentFile());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Map<String, List<String>>> output = executor.submit(() -> {
+            Map<String, List<String>> result = new HashMap<>();
+            result.put("errors", parseOutputFromProgram(runDocker.getErrorStream()));
+            result.put("output", parseOutputFromProgram(runDocker.getInputStream()));
+            return result;
+        });
+
+        try {
+            return output.get(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            output.cancel(true);
+            Map<String, List<String>> result = new HashMap<>();
+            result.put("errors", Collections.singletonList("Timeout running code"));
+            return result;
+        }
     }
     
     private void createDockerfile(String className, String directoryToSaveTo) throws IOException {
