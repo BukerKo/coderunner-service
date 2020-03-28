@@ -10,6 +10,7 @@ import com.gmail.buer2012.service.CodeRunnerService;
 import com.gmail.buer2012.service.EmailSenderService;
 import com.gmail.buer2012.service.RunInformationService;
 import com.gmail.buer2012.service.UserService;
+import java.util.concurrent.ExecutionException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +35,8 @@ public class CodeRunnerController {
     
     @PostMapping(value = "/run", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CodeRunnerResponse> runCode(@RequestBody CoderunnerRequest coderunnerRequest,
-                                                      @CurrentUser UserPrincipal userPrincipal) throws IOException, InterruptedException {
+                                                      @CurrentUser UserPrincipal userPrincipal)
+        throws IOException, InterruptedException, ExecutionException {
         User user = userService.findById(userPrincipal.getId()).get();
         Map<String, List<String>> result = codeRunnerService.compileAndRun(coderunnerRequest, user);
         CodeRunnerResponse response = new CodeRunnerResponse();
