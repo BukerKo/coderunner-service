@@ -139,7 +139,7 @@ public class AuthController {
             }
             else {
                 return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Cant change password for account registered using Facebook"));
+                    .body(new ApiResponse(false, "Can't change password for account registered using Facebook"));
             }
         }
         return ResponseEntity.ok(0);
