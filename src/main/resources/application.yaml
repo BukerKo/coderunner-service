@@ -1,19 +1,21 @@
+server:
+  port: 8090
+
 app:
   auth:
-    tokenSecret: JWTSuperSecretKey
+    tokenSecret: ac2047c3edbed889779dc23594992f56709cf501e55e5e822e571ba442fb32c4
     tokenExpirationMsec: 604800000
-  oauth2:
-    authorizedRedirectUris:
-      - https://coderunner.tcomad.tk/login
+
+aws:
+  enabled: true
+  accessKey: AKIA6PLEN54HD4FRVEHZ
+  secretKey: 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
+  bucketName: coderunner-bucket
+  bucketAddress: https://coderunner-bucket.s3.us-east-2.amazonaws.com
 
 settings:
   front-url: https://coderunner.tcomad.tk
 
-server:
-  tomcat:
-    internal-proxies: .*
-    uri-encoding: UTF-8
-  forward-headers-strategy: native
 spring:
   mail:
     host: smtp.gmail.com
@@ -24,20 +26,23 @@ spring:
           auth: true
           starttls:
             enable: true
+    username: cmpskhpi
+    password: '!In19fiZ30$ComP19*modelIng64^'
   datasource:
-    initialization-mode: always
-  http:
-    encoding:
-      charset: UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://database-prod.cdtkmiuurwsr.us-east-2.rds.amazonaws.com:3306/Coderunner?serverTimezone=UTC&useUnicode=yes&characterEncoding=UTF-8
+    username: admin
+    password: b563a80c0a4247ec074ca2e6e7b9a394
   jpa:
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
   security:
     oauth2:
       client:
         registration:
           facebook:
-            redirectUri: "https://rue.tcomad.tk/oauth2/callback/{registrationId}" # Note that facebook now mandates the use of https redirect URIs, so make sure your app supports https in production
-            scope:
-              - email
-              - public_profile
+            clientId: 848358615623604
+            clientSecret: 2dd7d5366c61894eb4d0b8ae336a685c

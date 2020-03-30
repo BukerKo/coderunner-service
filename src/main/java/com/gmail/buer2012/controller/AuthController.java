@@ -147,8 +147,10 @@ public class AuthController {
 
     @PostMapping("/confirmRestore")
     public ResponseEntity<?> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest) {
+        EmailConfirmationToken emailConfirmationToken = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken());
+        emailConfirmationTokenRepository.delete(emailConfirmationToken);
         User user = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken()).getUser();
-        user.setPassword(passwordEncoder.encode(restorePasswordRequest.getToken()));
+        user.setPassword(passwordEncoder.encode(restorePasswordRequest.getPassword()));
         userService.updateUser(user);
         return ResponseEntity.ok(0);
     }
