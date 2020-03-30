@@ -122,7 +122,7 @@ public class AuthController {
     }
 
     @PostMapping("/requestRestore")
-    public ResponseEntity<?> registerUser(@RequestBody RestorePasswordRequest restorePasswordRequest) {
+    public ResponseEntity<?> requestRestore(@RequestBody RestorePasswordRequest restorePasswordRequest) {
         Optional<User> user = userService.findByEmail(restorePasswordRequest.getEmail());
         if(user.isPresent()) {
             if(user.get().getProvider() == AuthProvider.local) {
@@ -139,7 +139,7 @@ public class AuthController {
             }
             else {
                 return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, "Cant change password for account registered trough Facebook"));
+                    .body(new ApiResponse(false, "Cant change password for account registered using Facebook"));
             }
         }
         return ResponseEntity.ok(0);
