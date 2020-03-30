@@ -10,18 +10,16 @@ import com.gmail.buer2012.service.CodeRunnerService;
 import com.gmail.buer2012.service.EmailSenderService;
 import com.gmail.buer2012.service.RunInformationService;
 import com.gmail.buer2012.service.UserService;
-import java.util.concurrent.ExecutionException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @AllArgsConstructor
@@ -36,7 +34,7 @@ public class CodeRunnerController {
     @PostMapping(value = "/run", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CodeRunnerResponse> runCode(@RequestBody CoderunnerRequest coderunnerRequest,
                                                       @CurrentUser UserPrincipal userPrincipal)
-        throws IOException, InterruptedException, ExecutionException {
+        throws IOException, InterruptedException {
         User user = userService.findById(userPrincipal.getId()).get();
         Map<String, List<String>> result = codeRunnerService.compileAndRun(coderunnerRequest, user);
         CodeRunnerResponse response = new CodeRunnerResponse();
