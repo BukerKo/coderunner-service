@@ -1,9 +1,14 @@
 package com.gmail.buer2012.controller;
 
-
-import com.gmail.buer2012.entity.*;
+import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.entity.AuthProvider;
+import com.gmail.buer2012.entity.EmailConfirmationToken;
+import com.gmail.buer2012.entity.Role;
+import com.gmail.buer2012.entity.RoleName;
+import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.ApiResponse;
 import com.gmail.buer2012.payload.JwtAuthenticationResponse;
+import com.gmail.buer2012.payload.RestorePasswordRequest;
 import com.gmail.buer2012.payload.SignInRequest;
 import com.gmail.buer2012.payload.SignUpRequest;
 import com.gmail.buer2012.repository.EmailConfirmationTokenRepository;
@@ -13,6 +18,9 @@ import com.gmail.buer2012.security.UserPrincipal;
 import com.gmail.buer2012.service.EmailSenderService;
 import com.gmail.buer2012.service.UserService;
 import com.gmail.buer2012.utils.ApiUtils;
+import java.util.Collections;
+import java.util.Optional;
+import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpHeaders;
@@ -23,18 +31,19 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import javax.validation.Valid;
-import java.util.Collections;
-import java.util.Optional;
 
 @AllArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    
+
     private AuthenticationManager authenticationManager;
     private UserService userService;
     private RoleRepository roleRepository;
@@ -43,25 +52,26 @@ public class AuthController {
     private ApiUtils apiUtils;
     private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
     private EmailSenderService emailSenderService;
-    
+    private CustomProperties customProperties;
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody SignInRequest signInRequest) {
         Optional<User> userOptional = userService.findByEmail(signInRequest.getUsernameOrEmail());
-        
+
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             if (!user.getEnabled()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"You should confirm email first!\"}");
             }
         }
-        
+
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                 signInRequest.getUsernameOrEmail(),
                 signInRequest.getPassword()
         );
         Authentication authentication = authenticationManager.authenticate(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         String jwt = tokenProvider.generateToken(authentication);
         RoleName role = apiUtils.getRoleFromAuthorities(authentication.getAuthorities());
         UserPrincipal userPrincipal = ((UserPrincipal) authentication.getPrincipal());
@@ -69,28 +79,28 @@ public class AuthController {
         AuthProvider provider = userPrincipal.getProvider();
         return ResponseEntity.ok().body(new JwtAuthenticationResponse(jwt, role, username, provider));
     }
-    
+
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         String requestUsername = signUpRequest.getUsername();
         String requestEmail = signUpRequest.getEmail();
         String requestPassword = signUpRequest.getPassword();
-        
+
         if (userService.existsByEmail(requestEmail)) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, "Email Address is already in use!"));
         }
-        
+
         User user = new User(requestEmail, passwordEncoder.encode(requestPassword), requestUsername, AuthProvider.local, false);
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER);
         user.setRoles(Collections.singleton(userRole));
         User persistedUser = userService.persist(user);
-        
+
         sendConfirmationEmail(requestEmail, persistedUser);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(persistedUser);
     }
-    
+
     private void sendConfirmationEmail(String requestEmail, User user) {
         String emailConfirmationToken = RandomStringUtils.randomAlphanumeric(32);
         emailConfirmationTokenRepository.save(new EmailConfirmationToken(user, emailConfirmationToken));
@@ -100,14 +110,46 @@ public class AuthController {
                 .build().toString();
         emailSenderService.sendEmail(requestEmail, location);
     }
-    
+
     @GetMapping("/confirmEmail")
     public ResponseEntity<?> confirmEmail(@RequestParam String token) {
         User user = emailConfirmationTokenRepository.findByToken(token).getUser();
         user.setEnabled(true);
         userService.updateUser(user);
-        
-        String coderunnerUri = "https://coderunner.tcomad.tk/login?confirmed=true";
+
+        String coderunnerUri = customProperties.getFrontUrl() + "login?confirmed=true";
         return ResponseEntity.status(HttpStatus.SEE_OTHER).header(HttpHeaders.LOCATION, coderunnerUri).build();
+    }
+
+    @PostMapping("/requestRestore")
+    public ResponseEntity<?> registerUser(@RequestBody RestorePasswordRequest restorePasswordRequest) {
+        Optional<User> user = userService.findByEmail(restorePasswordRequest.getEmail());
+        if(user.isPresent()) {
+            if(user.get().getProvider() == AuthProvider.local) {
+                String confirmationToken = RandomStringUtils
+                    .randomAlphanumeric(32);
+                emailConfirmationTokenRepository.save(
+                    new EmailConfirmationToken(user.get(), confirmationToken));
+                String coderunnerUri =
+                    customProperties.getFrontUrl() + "/restore?token="
+                        + confirmationToken;
+                emailSenderService
+                    .sendEmail(user.get().getEmail(), coderunnerUri);
+                return ResponseEntity.ok(0);
+            }
+            else {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "Cant change password for account registered trough Facebook"));
+            }
+        }
+        return ResponseEntity.ok(0);
+    }
+
+    @PostMapping("/confirmRestore")
+    public ResponseEntity<?> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest) {
+        User user = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken()).getUser();
+        user.setPassword(passwordEncoder.encode(restorePasswordRequest.getToken()));
+        userService.updateUser(user);
+        return ResponseEntity.ok(0);
     }
 }
