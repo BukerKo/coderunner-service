@@ -6,6 +6,9 @@ app:
     authorizedRedirectUris:
       - https://coderunner.tcomad.tk/login
 
+settings:
+  front-url: https://coderunner.tcomad.tk
+
 server:
   tomcat:
     internal-proxies: .*

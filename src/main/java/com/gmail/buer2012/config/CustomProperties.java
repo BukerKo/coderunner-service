@@ -6,10 +6,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("app.temporary.dir")
+@ConfigurationProperties(prefix = "settings")
 public class CustomProperties {
     
     @Getter
     @Setter
     private String temporaryDir = "temporary";
+
+    @Getter
+    @Setter
+    private String frontUrl;
 }
