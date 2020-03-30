@@ -148,10 +148,17 @@ public class AuthController {
     @PostMapping("/confirmRestore")
     public ResponseEntity<?> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest) {
         EmailConfirmationToken emailConfirmationToken = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken());
-        User user = emailConfirmationToken.getUser();
-        emailConfirmationTokenRepository.delete(emailConfirmationToken);
-        user.setPassword(passwordEncoder.encode(restorePasswordRequest.getPassword()));
-        userService.updateUser(user);
-        return ResponseEntity.ok(0);
+        if(emailConfirmationToken != null) {
+            User user = emailConfirmationToken.getUser();
+            emailConfirmationTokenRepository.delete(emailConfirmationToken);
+            user.setPassword(
+                passwordEncoder.encode(restorePasswordRequest.getPassword()));
+            userService.updateUser(user);
+            return ResponseEntity.ok(0);
+        }
+        else {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse(false, "This link is no longer active, please retry restoring the password"));
+        }
     }
 }
