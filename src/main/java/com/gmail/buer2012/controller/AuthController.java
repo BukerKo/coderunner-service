@@ -117,7 +117,7 @@ public class AuthController {
         user.setEnabled(true);
         userService.updateUser(user);
 
-        String coderunnerUri = customProperties.getFrontUrl() + "login?confirmed=true";
+        String coderunnerUri = customProperties.getFrontUrl() + "/login?confirmed=true";
         return ResponseEntity.status(HttpStatus.SEE_OTHER).header(HttpHeaders.LOCATION, coderunnerUri).build();
     }
 
@@ -148,8 +148,8 @@ public class AuthController {
     @PostMapping("/confirmRestore")
     public ResponseEntity<?> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest) {
         EmailConfirmationToken emailConfirmationToken = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken());
+        User user = emailConfirmationToken.getUser();
         emailConfirmationTokenRepository.delete(emailConfirmationToken);
-        User user = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken()).getUser();
         user.setPassword(passwordEncoder.encode(restorePasswordRequest.getPassword()));
         userService.updateUser(user);
         return ResponseEntity.ok(0);
