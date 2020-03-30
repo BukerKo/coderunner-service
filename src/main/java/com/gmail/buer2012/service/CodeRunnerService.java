@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -51,7 +50,7 @@ public class CodeRunnerService {
     private static final Integer EXECUTION_TIMEOUT_SECONDS = 3;
     
     public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user)
-        throws IOException, InterruptedException, ExecutionException {
+        throws IOException, InterruptedException {
         String className = coderunnerRequest.getClassName();
         File fileWithSourceCode = new File(getPathToClass() + File.separator + className + ".java");
         
@@ -122,7 +121,7 @@ public class CodeRunnerService {
     }
     
     public Map<String, List<String>> run(File fileWithSourceCode, String className)
-        throws IOException, InterruptedException, ExecutionException {
+        throws IOException, InterruptedException {
         createDockerfile(className, fileWithSourceCode.getParent());
         
         String dockerContainerName = String.valueOf(System.currentTimeMillis());
@@ -143,17 +142,22 @@ public class CodeRunnerService {
 
         try {
             return output.get(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
+        } catch (Exception e) {
             output.cancel(true);
             Map<String, List<String>> result = new HashMap<>();
-            result.put("errors", Collections.singletonList("Timeout running code"));
+            if(e instanceof TimeoutException) {
+                result.put("errors", Collections.singletonList("Timeout running your code"));
+            }
+            else {
+                result.put("errors", Collections.singletonList(e.getMessage()));
+            }
             return result;
         }
     }
     
     private void createDockerfile(String className, String directoryToSaveTo) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + File.separator + DOCKERFILENAME));
-        writer.write("FROM openjdk:8-jre-alpine\n");
+        writer.write("FROM adoptopenjdk:11-jre-hotspot\n");
         writer.write("COPY " + className + ".class /\n");
         writer.write("CMD [\"java\", \"" + className + "\"]");
         writer.close();
