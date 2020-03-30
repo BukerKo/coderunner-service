@@ -108,7 +108,7 @@ public class AuthController {
                 .fromCurrentContextPath().path("/auth/confirmEmail")
                 .queryParam("token", emailConfirmationToken)
                 .build().toString();
-        emailSenderService.sendEmail(requestEmail, location);
+        emailSenderService.sendEmail(requestEmail, location, "Confirm your mail");
     }
 
     @GetMapping("/confirmEmail")
@@ -134,7 +134,7 @@ public class AuthController {
                     customProperties.getFrontUrl() + "/restore?token="
                         + confirmationToken;
                 emailSenderService
-                    .sendEmail(user.get().getEmail(), coderunnerUri);
+                    .sendEmail(user.get().getEmail(), coderunnerUri, "Password recovering");
                 return ResponseEntity.ok(0);
             }
             else {
