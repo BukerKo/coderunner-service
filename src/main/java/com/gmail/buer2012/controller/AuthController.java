@@ -89,8 +89,12 @@ public class AuthController {
         String requestUsername = signUpRequest.getUsername();
         String requestEmail = signUpRequest.getEmail();
         String requestPassword = signUpRequest.getPassword();
-
-        if (userService.existsByEmail(requestEmail)) {
+        Optional<User> userFromDb = userService.findByEmail(requestEmail);
+        if (userFromDb.isPresent()) {
+            if (!userFromDb.get().getProvider().equals(AuthProvider.local)) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "You are trying to sign up using Facebook mail. Please login using Facebook account"));
+            }
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, "Email Address is already in use!"));
         }
