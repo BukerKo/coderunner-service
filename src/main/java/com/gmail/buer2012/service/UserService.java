@@ -24,7 +24,7 @@ public class UserService {
     }
     
     public User updateUser(User user) {
-        User userFromDb = userRepository.findByUsername(user.getUsername()).orElse(null);
+        User userFromDb = userRepository.findByEmail(user.getEmail()).orElse(null);
         
         userFromDb.setPassword(user.getPassword());
         userFromDb.setEmail(user.getEmail());
