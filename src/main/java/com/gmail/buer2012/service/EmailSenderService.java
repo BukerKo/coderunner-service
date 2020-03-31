@@ -11,10 +11,10 @@ public class EmailSenderService {
     
     private JavaMailSender javaMailSender;
     
-    public void sendEmail(String recipient, String content) {
+    public void sendEmail(String recipient, String content, String topic) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(recipient);
-        message.setSubject("Code from Coderunner");
+        message.setSubject(topic);
         message.setText(content);
         
         javaMailSender.send(message);

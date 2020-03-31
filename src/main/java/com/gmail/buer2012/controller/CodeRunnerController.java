@@ -46,7 +46,7 @@ public class CodeRunnerController {
     
     @PostMapping(value = "/sendCode", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, String>> sendCode(@RequestBody SendEmailRequest sendEmailRequest, @CurrentUser UserPrincipal userPrincipal) {
-        emailSenderService.sendEmail(userPrincipal.getEmail(), sendEmailRequest.getCode());
+        emailSenderService.sendEmail(userPrincipal.getEmail(), sendEmailRequest.getCode(), "Your code from CodeRunner");
         Map<String, String> res = new HashMap<>();
         res.put("status", "success");
         return ResponseEntity.ok().body(res);
