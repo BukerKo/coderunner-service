@@ -63,6 +63,10 @@ public class AuthController {
             if (!user.getEnabled()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"message\": \"You should confirm email first!\"}");
             }
+            if(!user.getProvider().equals(AuthProvider.local)) {
+                return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "This account was signed up with Facebook, use Facebook login button to login into this account"));
+            }
         }
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
