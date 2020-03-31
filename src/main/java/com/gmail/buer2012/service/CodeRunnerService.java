@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -163,14 +164,10 @@ public class CodeRunnerService {
         writer.close();
     }
     
-    private List<String> parseOutputFromProgram(InputStream inputStream) throws IOException {
+    private List<String> parseOutputFromProgram(InputStream inputStream) {
         BufferedReader errors = new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-        StringBuilder stringBuffer = new StringBuilder();
-        while ((line = errors.readLine()) != null) {
-            stringBuffer.append(line);
-        }
-        return Collections.singletonList(stringBuffer.toString());
+        return Collections.singletonList(errors.lines()
+            .collect(Collectors.joining(System.lineSeparator())));
     }
     
     private void writeToFile(File file, String content) throws IOException {
