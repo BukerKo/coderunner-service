@@ -113,12 +113,22 @@ public class AuthController {
 
     @GetMapping("/confirmEmail")
     public ResponseEntity<?> confirmEmail(@RequestParam String token) {
-        User user = emailConfirmationTokenRepository.findByToken(token).getUser();
-        user.setEnabled(true);
-        userService.updateUser(user);
+        Optional<EmailConfirmationToken> emailConfirmationToken =
+            emailConfirmationTokenRepository.findByToken(token);
+        if(emailConfirmationToken.isPresent()) {
+            User user = emailConfirmationToken.get().getUser();
+            user.setEnabled(true);
+            userService.updateUser(user);
 
-        String coderunnerUri = customProperties.getFrontUrl() + "/login?confirmed=true";
-        return ResponseEntity.status(HttpStatus.SEE_OTHER).header(HttpHeaders.LOCATION, coderunnerUri).build();
+            String coderunnerUri =
+                customProperties.getFrontUrl() + "/login?confirmed=true";
+            return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, coderunnerUri).build();
+        }
+        else {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse(false, "Can't verify token"));
+        }
     }
 
     @PostMapping("/requestRestore")
@@ -147,11 +157,19 @@ public class AuthController {
 
     @PostMapping("/confirmRestore")
     public ResponseEntity<?> restorePassword(@RequestBody RestorePasswordRequest restorePasswordRequest) {
-        EmailConfirmationToken emailConfirmationToken = emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken());
-        User user = emailConfirmationToken.getUser();
-        emailConfirmationTokenRepository.delete(emailConfirmationToken);
-        user.setPassword(passwordEncoder.encode(restorePasswordRequest.getPassword()));
-        userService.updateUser(user);
-        return ResponseEntity.ok(0);
+        Optional<EmailConfirmationToken> emailConfirmationToken =
+            emailConfirmationTokenRepository.findByToken(restorePasswordRequest.getToken());
+        if(emailConfirmationToken.isPresent()) {
+            User user = emailConfirmationToken.get().getUser();
+            emailConfirmationTokenRepository.delete(emailConfirmationToken.get());
+            user.setPassword(
+                passwordEncoder.encode(restorePasswordRequest.getPassword()));
+            userService.updateUser(user);
+            return ResponseEntity.ok(0);
+        }
+        else {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse(false, "This link is no longer active, please retry restoring the password"));
+        }
     }
 }
