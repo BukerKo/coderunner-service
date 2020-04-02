@@ -1,6 +1,7 @@
 package com.gmail.buer2012.controller;
 
 import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.constants.MailConstants;
 import com.gmail.buer2012.entity.AuthProvider;
 import com.gmail.buer2012.entity.EmailConfirmationToken;
 import com.gmail.buer2012.entity.Role;
@@ -116,7 +117,11 @@ public class AuthController {
                 .fromCurrentContextPath().path("/auth/confirmEmail")
                 .queryParam("token", emailConfirmationToken)
                 .build().toString();
-        emailSenderService.sendEmail(requestEmail, location, "Confirm your mail");
+        emailSenderService.sendEmail(
+            requestEmail,
+            String.format(MailConstants.CONFIRM_EMAIL_MESSAGE, user.getUsername(), location),
+            MailConstants.CONFIRM_EMAIL_TOPIC)
+        ;
     }
 
     @GetMapping("/confirmEmail")
@@ -151,8 +156,11 @@ public class AuthController {
                 String coderunnerUri =
                     customProperties.getFrontUrl() + "/restore?token="
                         + confirmationToken;
-                emailSenderService
-                    .sendEmail(user.get().getEmail(), coderunnerUri, "Password recovering");
+                emailSenderService.sendEmail(
+                    user.get().getEmail(),
+                    String.format(MailConstants.RESTORE_PASSWORD_MESSAGE, user.get().getUsername(), coderunnerUri),
+                    MailConstants.RESTORE_PASSWORD_TOPIC)
+                ;
                 return ResponseEntity.ok(0);
             }
             else {
