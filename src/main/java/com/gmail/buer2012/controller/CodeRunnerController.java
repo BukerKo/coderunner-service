@@ -1,5 +1,6 @@
 package com.gmail.buer2012.controller;
 
+import com.gmail.buer2012.constants.MailConstants;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.CodeRunnerResponse;
 import com.gmail.buer2012.payload.CoderunnerRequest;
@@ -46,7 +47,7 @@ public class CodeRunnerController {
     
     @PostMapping(value = "/sendCode", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, String>> sendCode(@RequestBody SendEmailRequest sendEmailRequest, @CurrentUser UserPrincipal userPrincipal) {
-        emailSenderService.sendEmail(userPrincipal.getEmail(), sendEmailRequest.getCode(), "Your code from CodeRunner");
+        emailSenderService.sendEmail(userPrincipal.getEmail(), sendEmailRequest.getCode(), MailConstants.CODE_TOPIC);
         Map<String, String> res = new HashMap<>();
         res.put("status", "success");
         return ResponseEntity.ok().body(res);
