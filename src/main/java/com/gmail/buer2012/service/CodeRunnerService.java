@@ -48,7 +48,7 @@ public class CodeRunnerService {
     private static final String gatherInformation = "gatherInformation";
     
     private static final String DOCKERFILENAME = "Dockerfile";
-    private static final Integer EXECUTION_TIMEOUT_SECONDS = 3;
+    private static final Integer EXECUTION_TIMEOUT_SECONDS = 10;
     
     public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user)
         throws IOException, InterruptedException {
