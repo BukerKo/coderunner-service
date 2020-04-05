@@ -48,7 +48,6 @@ public class CodeRunnerService {
     private static final String gatherInformation = "gatherInformation";
     
     private static final String DOCKERFILENAME = "Dockerfile";
-    private static final Integer EXECUTION_TIMEOUT_SECONDS = 10;
     
     public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user)
         throws IOException, InterruptedException {
@@ -142,7 +141,7 @@ public class CodeRunnerService {
         });
 
         try {
-            return output.get(EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            return output.get(customProperties.getTimeout(), TimeUnit.SECONDS);
         } catch (Exception e) {
             output.cancel(true);
             Map<String, List<String>> result = new HashMap<>();

@@ -16,4 +16,8 @@ public class CustomProperties {
     @Getter
     @Setter
     private String frontUrl;
+
+    @Getter
+    @Setter
+    private Integer timeout = 5;
 }
