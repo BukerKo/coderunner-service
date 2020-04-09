@@ -1,5 +1,6 @@
 package com.gmail.buer2012.controller;
 
+import com.gmail.buer2012.entity.RunInformation;
 import com.gmail.buer2012.entity.Task;
 import com.gmail.buer2012.repository.RunInformationRepository;
 import com.gmail.buer2012.repository.TaskRepository;
@@ -24,6 +25,13 @@ public class AdminController {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> getResults() {
     return ResponseEntity.ok(runInformationRepository.findAll());
+  }
+
+  @PostMapping("/deleteResult")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> deleteResult(@RequestBody RunInformation runInformation) {
+    runInformationRepository.delete(runInformation);
+    return ResponseEntity.ok(0);
   }
 
   @PostMapping("/setTask")
