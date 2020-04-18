@@ -4,12 +4,14 @@ import com.gmail.buer2012.entity.Task;
 import com.gmail.buer2012.repository.RunInformationRepository;
 import com.gmail.buer2012.repository.TaskRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,8 +24,8 @@ public class AdminController {
 
   @GetMapping("/results")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> getResults() {
-    return ResponseEntity.ok(runInformationRepository.findAll());
+  public ResponseEntity<?> getResults(Pageable page, @RequestParam(required = false, defaultValue = "") String username) {
+    return ResponseEntity.ok(runInformationRepository.findByUser_UsernameContainingIgnoreCase(page, username));
   }
 
   @PostMapping("/setTask")
