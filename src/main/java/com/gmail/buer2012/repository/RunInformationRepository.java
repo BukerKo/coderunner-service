@@ -9,4 +9,5 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface RunInformationRepository extends PagingAndSortingRepository<RunInformation, Long> {
     Optional<RunInformation> findByUserId(Long userId);
     Page<RunInformation> findByUser_UsernameContainingIgnoreCase(Pageable page, String user_username);
+    void deleteById(Long id);
 }
