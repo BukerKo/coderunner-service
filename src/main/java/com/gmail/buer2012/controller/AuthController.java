@@ -1,6 +1,6 @@
 package com.gmail.buer2012.controller;
 
-import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.config.AppProperties;
 import com.gmail.buer2012.constants.MailConstants;
 import com.gmail.buer2012.entity.AuthProvider;
 import com.gmail.buer2012.entity.EmailConfirmationToken;
@@ -21,7 +21,6 @@ import com.gmail.buer2012.service.UserService;
 import com.gmail.buer2012.utils.ApiUtils;
 import java.util.Collections;
 import java.util.Optional;
-import javax.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +31,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,18 +45,18 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private AuthenticationManager authenticationManager;
-    private UserService userService;
-    private RoleRepository roleRepository;
-    private PasswordEncoder passwordEncoder;
-    private JwtTokenProvider tokenProvider;
-    private ApiUtils apiUtils;
-    private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
-    private EmailSenderService emailSenderService;
-    private CustomProperties customProperties;
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
+    private final ApiUtils apiUtils;
+    private final EmailConfirmationTokenRepository emailConfirmationTokenRepository;
+    private final EmailSenderService emailSenderService;
+    private final AppProperties appProperties;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody SignInRequest signInRequest) {
+    public ResponseEntity<?> authenticateUser(@Validated @RequestBody SignInRequest signInRequest) {
         Optional<User> userOptional = userService.findByEmail(signInRequest.getUsernameOrEmail());
 
         if (userOptional.isPresent()) {
@@ -86,7 +86,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Validated @RequestBody SignUpRequest signUpRequest) {
         String requestUsername = signUpRequest.getUsername();
         String requestEmail = signUpRequest.getEmail();
         String requestPassword = signUpRequest.getPassword();
@@ -134,7 +134,7 @@ public class AuthController {
             userService.updateUser(user);
 
             String coderunnerUri =
-                customProperties.getFrontUrl() + "/login?confirmed=true";
+                appProperties.getFrontUrl() + "/login?confirmed=true";
             return ResponseEntity.status(HttpStatus.SEE_OTHER)
                 .header(HttpHeaders.LOCATION, coderunnerUri).build();
         }
@@ -154,7 +154,7 @@ public class AuthController {
                 emailConfirmationTokenRepository.save(
                     new EmailConfirmationToken(user.get(), confirmationToken));
                 String coderunnerUri =
-                    customProperties.getFrontUrl() + "/restore?token="
+                    appProperties.getFrontUrl() + "/restore?token="
                         + confirmationToken;
                 emailSenderService.sendEmail(
                     user.get().getEmail(),

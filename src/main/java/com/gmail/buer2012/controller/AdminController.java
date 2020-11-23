@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin")
 public class AdminController {
 
-  private RunInformationRepository runInformationRepository;
-  private TaskRepository taskRepository;
+  private final RunInformationRepository runInformationRepository;
+  private final TaskRepository taskRepository;
 
   @GetMapping("/results")
   @PreAuthorize("hasRole('ADMIN')")
@@ -34,7 +34,7 @@ public class AdminController {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteResult(@PathVariable Long id) {
     runInformationRepository.deleteById(id);
-    return ResponseEntity.ok(0);
+    return ResponseEntity.ok().build();
   }
 
   @PostMapping("/setTask")
@@ -43,7 +43,7 @@ public class AdminController {
     Task task = taskRepository.findFirstByTaskIsNotNull();
     task.setTask(newTask);
     taskRepository.save(task);
-    return ResponseEntity.ok(0);
+    return ResponseEntity.ok().build();
   }
 
   @GetMapping("/getTask")

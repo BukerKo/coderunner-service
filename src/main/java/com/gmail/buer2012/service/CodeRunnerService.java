@@ -2,7 +2,7 @@ package com.gmail.buer2012.service;
 
 import static com.gmail.buer2012.utils.ErrorUtils.getErrorMessages;
 
-import com.gmail.buer2012.config.CustomProperties;
+import com.gmail.buer2012.config.AppProperties;
 import com.gmail.buer2012.entity.RunInformation;
 import com.gmail.buer2012.entity.User;
 import com.gmail.buer2012.payload.CoderunnerRequest;
@@ -39,21 +39,24 @@ import org.springframework.util.FileSystemUtils;
 @Service
 @AllArgsConstructor
 public class CodeRunnerService {
-    
-    private FeatureRepository featureRepository;
-    private RunInformationService runInformationService;
-    private FileStorageService fileStorageService;
-    
-    private final CustomProperties customProperties;
-    private static final String gatherInformation = "gatherInformation";
-    
+
+    private static final String ERRORS = "errors";
+    private static final String OUTPUT = "output";
+    private static final String GATHER_INFORMATION = "gatherInformation";
     private static final String DOCKERFILENAME = "Dockerfile";
-    
+
+    private final FeatureRepository featureRepository;
+    private final RunInformationService runInformationService;
+    private final FileStorageService fileStorageService;
+    private final AppProperties appProperties;
+
+
+
     public Map<String, List<String>> compileAndRun(CoderunnerRequest coderunnerRequest, User user)
         throws IOException, InterruptedException {
         String className = coderunnerRequest.getClassName();
         File fileWithSourceCode = new File(getPathToClass() + File.separator + className + ".java");
-        
+
         if (fileWithSourceCode.getParentFile().mkdirs() && fileWithSourceCode.createNewFile()) {
             writeToFile(fileWithSourceCode, coderunnerRequest.getSourceCode());
             Map<String, List<String>> compileErrors = compile(fileWithSourceCode);
@@ -67,10 +70,10 @@ public class CodeRunnerService {
         executePostRunActions(user, fileWithSourceCode);
         return result;
     }
-    
+
     private void executePostRunActions(User user, File fileWithSourceCode)
         throws IOException {
-        Boolean gatherInformationEnabled = featureRepository.findByFeatureName(gatherInformation).getEnabled();
+        boolean gatherInformationEnabled = featureRepository.findByFeatureName(GATHER_INFORMATION).getEnabled();
         if (gatherInformationEnabled) {
             Optional<RunInformation> runInformation = runInformationService
                 .getByUser(user);
@@ -82,17 +85,17 @@ public class CodeRunnerService {
         }
         FileSystemUtils.deleteRecursively(fileWithSourceCode.getParentFile());
     }
-    
+
     private String getPathToClass() {
-        return customProperties.getTemporaryDir() + File.separator + System.currentTimeMillis();
+        return appProperties.getTemporaryDir() + File.separator + System.currentTimeMillis();
     }
-    
-    
+
+
     public Map<String, List<String>> compile(File fileWithSourceCode) throws IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-        
+
         Iterable<? extends JavaFileObject> compilationUnit
                 = fileManager.getJavaFileObjectsFromFiles(Collections.singletonList(fileWithSourceCode));
         JavaCompiler.CompilationTask task = compiler.getTask(
@@ -102,32 +105,32 @@ public class CodeRunnerService {
                 null,
                 null,
                 compilationUnit);
-        
+
         if (!task.call()) {
             return handleErrors(diagnostics.getDiagnostics());
         }
         fileManager.close();
-        
+
         return null;
     }
-    
+
     private Map<String, List<String>> handleErrors(List<Diagnostic<? extends JavaFileObject>> diagnostics) {
         Map<String, List<String>> result = new HashMap<>();
         if (diagnostics != null) {
-            result.put("errors", getErrorMessages(diagnostics));
+            result.put(ERRORS, getErrorMessages(diagnostics));
             return result;
         }
         return result;
     }
-    
+
     public Map<String, List<String>> run(File fileWithSourceCode, String className)
         throws IOException, InterruptedException {
         createDockerfile(className, fileWithSourceCode.getParent());
-        
+
         String dockerContainerName = String.valueOf(System.currentTimeMillis());
         String dockerBuildCommand = "docker build -t " + dockerContainerName + " .";
         String dockerRunCommand = "docker run " + dockerContainerName;
-        
+
         Process buildDocker = Runtime.getRuntime().exec(dockerBuildCommand, null, fileWithSourceCode.getParentFile());
         buildDocker.waitFor();
 
@@ -135,40 +138,39 @@ public class CodeRunnerService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Map<String, List<String>>> output = executor.submit(() -> {
             Map<String, List<String>> result = new HashMap<>();
-            result.put("errors", parseOutputFromProgram(runDocker.getErrorStream()));
-            result.put("output", parseOutputFromProgram(runDocker.getInputStream()));
+            result.put(ERRORS, parseOutputFromProgram(runDocker.getErrorStream()));
+            result.put(OUTPUT, parseOutputFromProgram(runDocker.getInputStream()));
             return result;
         });
 
         try {
-            return output.get(customProperties.getTimeout(), TimeUnit.SECONDS);
+            return output.get(appProperties.getTimeout(), TimeUnit.SECONDS);
         } catch (Exception e) {
             output.cancel(true);
             Map<String, List<String>> result = new HashMap<>();
             if(e instanceof TimeoutException) {
-                result.put("errors", Collections.singletonList("Timeout running your code"));
-            }
-            else {
-                result.put("errors", Collections.singletonList(e.getMessage()));
+                result.put(ERRORS, Collections.singletonList("Timeout running your code"));
+            } else {
+                result.put(ERRORS, Collections.singletonList(e.getMessage()));
             }
             return result;
         }
     }
-    
+
     private void createDockerfile(String className, String directoryToSaveTo) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + File.separator + DOCKERFILENAME));
-        writer.write("FROM adoptopenjdk:11-jre-hotspot\n");
-        writer.write("COPY " + className + ".class /\n");
-        writer.write("CMD [\"java\", \"" + className + "\"]");
-        writer.close();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(directoryToSaveTo + File.separator + DOCKERFILENAME))) {
+            writer.write("FROM adoptopenjdk:11-jre-hotspot\n");
+            writer.write("COPY " + className + ".class /\n");
+            writer.write("CMD [\"java\", \"" + className + "\"]");
+        }
     }
-    
+
     private List<String> parseOutputFromProgram(InputStream inputStream) {
         BufferedReader errors = new BufferedReader(new InputStreamReader(inputStream));
         return Collections.singletonList(errors.lines()
             .collect(Collectors.joining(System.lineSeparator())));
     }
-    
+
     private void writeToFile(File file, String content) throws IOException {
         try (Writer writer = new FileWriter(file)) {
             writer.write(content);
