@@ -26,6 +26,6 @@ jobs:
       - name: Delete old version
         run: ssh ubuntu@ec2-3-138-182-179.us-east-2.compute.amazonaws.com sudo rm /home/ubuntu/coderunner/coderunner.jar
       - name: Upload new version
-        run: scp ./target/coderunner.jar ubuntu@ec2-3-138-182-179.us-east-2.compute.amazonaws.com:/home/ubuntu/coderunner/coderunner.jar
+        run: scp -v ./target/coderunner.jar ubuntu@ec2-3-138-182-179.us-east-2.compute.amazonaws.com:/home/ubuntu/coderunner/coderunner.jar
       - name: Restart service
         run: ssh ubuntu@ec2-3-138-182-179.us-east-2.compute.amazonaws.com sudo /home/ubuntu/coderunner/start.sh
