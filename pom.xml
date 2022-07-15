@@ -16,7 +16,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <aws-sdk.version>1.11.133</aws-sdk.version>
+        <aws-sdk.version>1.12.261</aws-sdk.version>
     </properties>
 
     <dependencies>
